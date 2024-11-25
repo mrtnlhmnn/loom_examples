@@ -4,10 +4,14 @@ import de.accso.loom.part1_threadlocal.context.RegionCode;
 import de.accso.loom.part1_threadlocal.context.User;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Framework implements Callback {
 
     private Application app;
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public Framework(Application app) {
         this.app = app;
@@ -17,20 +21,24 @@ public class Framework implements Callback {
     private static final ThreadLocal<RegionCode>    regionCodeTL = new ThreadLocal<>();
     private static final ThreadLocal<User>                userTL = new ThreadLocal<>();
 
-    public void serveRequest(RegionCode regionCode, User user,
-                             Request request)
-    {
-        // set context
-        correlationIdTL.set(UUID.randomUUID());
-           regionCodeTL.set(regionCode);
-                 userTL.set(user);
+    public void serveRequest(RegionCode regionCode, User user, Request request) {
+        Runnable task = () -> {
+            // set context, per thread
+            correlationIdTL.set(UUID.randomUUID());
+            regionCodeTL.set(regionCode);
+            userTL.set(user);
 
-        app.handle((Callback) this, request);
+            app.handle((Callback) this, request);
 
-        // need to remove the context explicitely
-        correlationIdTL.remove();
-        regionCodeTL.remove();
-        userTL.remove();
+            // need to remove the context explicitely
+            correlationIdTL.remove();
+            regionCodeTL.remove();
+            userTL.remove();
+        };
+
+        executor.submit(task);
+        executor.submit(task);
+        executor.shutdown();
     }
 
     @Override

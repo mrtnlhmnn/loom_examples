@@ -4,10 +4,14 @@ import de.accso.loom.part2_scopedvalues.context.RegionCode;
 import de.accso.loom.part2_scopedvalues.context.User;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Framework implements Callback {
 
     private Application app;
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public Framework(Application app) {
         this.app = app;
@@ -17,22 +21,27 @@ public class Framework implements Callback {
     private static final ScopedValue<RegionCode>    regionCodeCtx = ScopedValue.newInstance();
     private static final ScopedValue<User>                userCtx = ScopedValue.newInstance();
 
-    public void serveRequest(RegionCode regionCode, User user,
-                             Request request)
-    {
-        ScopedValue
+    public void serveRequest(RegionCode regionCode, User user, Request request) {
+        Runnable task = () -> {
+            ScopedValue
                     // set context
-                   .where(correlationIdCtx, correlationIdCtx.isBound() ? getCorrelationId() : UUID.randomUUID())
-                   .where(regionCodeCtx,    regionCode)
-                   .where(userCtx,          user)
-              .run(() ->
-                  app.handle((Callback) this, request)
-              );
+                       .where(correlationIdCtx, correlationIdCtx.isBound() ? getCorrelationId() : UUID.randomUUID())
+                       .where(regionCodeCtx,    regionCode)
+                       .where(userCtx,          user)
+                    // run
+                    .run(() -> {
+                        app.handle((Callback) this, request);
+                    });
 
-        // no need to remove context explicitely, context is no longer bound!
-        assert( ! correlationIdCtx.isBound() );
-        assert( !    regionCodeCtx.isBound() );
-        assert( !          userCtx.isBound() );
+            // no need to remove context explicitely, context is no longer bound!
+            assert( ! correlationIdCtx.isBound() );
+            assert( !    regionCodeCtx.isBound() );
+            assert( !          userCtx.isBound() );
+        };
+
+        executor.submit(task);
+        executor.submit(task);
+        executor.shutdown();
     }
 
     @Override
