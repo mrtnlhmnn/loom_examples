@@ -8,6 +8,8 @@ import de.accso.loom.part1_threadlocal.framework.Application;
 
 import java.util.UUID;
 
+import static de.accso.loom.util.LogHelper.log;
+
 public class MyApp implements Application {
 
     @Override
@@ -28,7 +30,7 @@ public class MyApp implements Application {
                     region,
                     request.firstName(), request.lastName(), request.address());
 
-            System.err.println(textToLog);
+            log(textToLog);
 
             // Could change the mutable thread-local value here with set():
             // Framework.correlationIdTL.set(UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeee"));

@@ -1,11 +1,6 @@
 package de.accso.loom.part3_future.music;
 
-public record Instrument (String name) {
-    public enum AllInstruments{ Piano, Guitar, DoubleBass, Tuba, Drums, TenorSaxophone, AltoSaxophone, SopranoSaxophone,
-                                Clarinet, BassClarinet, Flute, AltoFlute, Trumpet, PiccoloTrumpet, BassTrombone }
-
-    @Override
-    public String toString() {
-        return name;
-    }
+public enum Instrument {
+    Piano, Guitar, DoubleBass, Tuba, Drums, TenorSaxophone, AltoSaxophone, SopranoSaxophone,
+    Clarinet, BassClarinet, Flute, AltoFlute, Trumpet, PiccoloTrumpet, BassTrombone
 }

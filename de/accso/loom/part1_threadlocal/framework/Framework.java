@@ -21,8 +21,8 @@ public class Framework implements Callback {
     {
         // set context
         correlationIdTL.set(UUID.randomUUID());
-        regionCodeTL.set(regionCode);
-        userTL.set(user);
+           regionCodeTL.set(regionCode);
+                 userTL.set(user);
 
         app.handle((Callback) this, request);
 

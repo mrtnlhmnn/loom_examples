@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static de.accso.loom.util.LogHelper.log;
+
 public record BigBand(List<Instrument> instruments, List<Musician> musicians) {
     public BigBand {
         assert instruments.size() == musicians.size();
@@ -20,6 +22,6 @@ public record BigBand(List<Instrument> instruments, List<Musician> musicians) {
                 .mapToObj(i ->  String.format(" %s plays '%s'", musicians.get(i), instruments.get(i)))
                 .collect(Collectors.joining(", "));
 
-        System.out.println("And finally ... Today's big band setup is: " + bigBandSetup);
+        log("And finally ... Today's big band setup is: " + bigBandSetup);
     }
 }

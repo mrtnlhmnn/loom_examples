@@ -4,15 +4,17 @@ import de.accso.loom.part3_future.music.BigBand;
 import de.accso.loom.part3_future.music.Instrument;
 import de.accso.loom.part3_future.music.Musician;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static de.accso.loom.part3_future.util.TimeHelper.*;
+import static de.accso.loom.util.LogHelper.logError;
+import static de.accso.loom.util.LogHelper.logWithTime;
+import static de.accso.loom.util.PauseHelper.randomPause;
 
-public class BigBandBuilder {
+public class BigBandBuilderUsingFutures {
 
     public BigBand getAllInstrumentsAndMusicians() {
         BigBand result = null;
@@ -47,12 +49,9 @@ public class BigBandBuilder {
     private List<Instrument> searchInstruments() {
         logWithTime("Task: Searching all instruments ... starting");
 
-        List<String> instrumentNames = Stream.of(Instrument.AllInstruments.values()).map(Enum::name).toList();
-
-        List<Instrument> instruments = instrumentNames.stream()
+        List<Instrument> instruments = Arrays.stream(Instrument.values())
                 .peek(_ -> randomPause(50, 500)) // it takes a while to find each instrument
-                .map(Instrument::new)
-                .peek(instrument -> System.err.println("\tInstrument " + instrument.name() + " found and ready ..."))
+                .peek(instrument -> logError("\tInstrument " + instrument.name() + " found and ready ..."))
                 .collect(Collectors.toList());
 
         logWithTime("Task: Searching all instruments ... done");
@@ -63,23 +62,20 @@ public class BigBandBuilder {
     private List<Musician> wakeUpMusicians() {
         logWithTime("Task: Waking up all musicians ... starting");
 
-        List<String> musicianNames = Stream.of(Musician.AllMusicians.values()).map(Enum::name).toList();
-
         // now let's enforce an error here at musician number 3
         AtomicInteger countDownToError = new AtomicInteger(3);
 
-        List<Musician> musicians = musicianNames.stream()
+        List<Musician> musicians = Arrays.stream(Musician.values())
                 .peek(_ -> randomPause(100, 1_000)) //  it takes a while to wake up each musician
 //                .peek(_ -> {
 //                    countDownToError.decrementAndGet();
 //                    if (countDownToError.get() == 0) {
 //                        String errorText = "Boom! Error while working on waking up all musicians!";
-//                        System.err.println(errorText);
+//                        logError(errorText);
 //                        throw new RuntimeException(errorText);
 //                    }
 //                })
-                .map(Musician::new)
-                .peek(musician -> System.err.println("\tMusician " + musician.name() + " woke up ..."))
+                .peek(musician -> logError("\tMusician   " + musician.name() + " woke up ..."))
                 .collect(Collectors.toList());
 
         logWithTime("Task: Waking up all musicians ... done");

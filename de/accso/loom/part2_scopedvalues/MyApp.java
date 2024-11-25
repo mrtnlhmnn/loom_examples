@@ -8,6 +8,8 @@ import de.accso.loom.part2_scopedvalues.framework.Request;
 
 import java.util.UUID;
 
+import static de.accso.loom.util.LogHelper.logError;
+
 public class MyApp implements Application {
 
     @Override
@@ -27,7 +29,7 @@ public class MyApp implements Application {
                     correlationId,
                     region,
                     request.firstName(), request.lastName(), request.address());
-            System.err.println(textToLog);
+            logError(textToLog);
 
             // ... more business code goes here
         }
