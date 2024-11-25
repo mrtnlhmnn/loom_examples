@@ -15,10 +15,11 @@ public record BigBand(List<Instrument> instruments, List<Musician> musicians) {
         Collections.shuffle(instruments);
         Collections.shuffle(musicians);
 
-        String bigBandSetup = IntStream.range(0, instruments.size())
+        String bigBandSetup =
+                IntStream.range(0, instruments.size())
                 .mapToObj(i ->  String.format(" %s plays '%s'", musicians.get(i), instruments.get(i)))
                 .collect(Collectors.joining(", "));
 
-        System.err.println("Today's big band setup: " + bigBandSetup);
+        System.out.println("And finally ... Today's big band setup is: " + bigBandSetup);
     }
 }

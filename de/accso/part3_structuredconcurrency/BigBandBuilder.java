@@ -8,76 +8,87 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static de.accso.part3_structuredconcurrency.util.TimeHelper.randomPause;
-import static de.accso.part3_structuredconcurrency.util.TimeHelper.printTimed;
+import static de.accso.part3_structuredconcurrency.util.TimeHelper.*;
+import static java.util.concurrent.StructuredTaskScope.Subtask.State.FAILED;
 
 public class BigBandBuilder {
-    public static void main(String[] args) {
-        BigBand bigBand = new BigBandBuilder().getAllInstrumentsAndMusicians();
-        bigBand.startToPlay();
-    }
 
     public BigBand getAllInstrumentsAndMusicians() {
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+        BigBand result = null;
 
-            // create tasks and fork them
-            printTimed("Now forking to wake up all musicians");
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            int maxTimeOutInMs = 20_000; // 1s max for each musician => 17s max
+
+            // (1) create tasks and fork them
+            logWithTime("Now forking to wake up all musicians");
             StructuredTaskScope.Subtask<List<Musician>>     musiciansTask = scope.fork( this::wakeUpMusicians   );
 
-            printTimed("Now forking to search all instruments");
+            logWithTime("Now forking to search all instruments");
             StructuredTaskScope.Subtask<List<Instrument>> instrumentsTask = scope.fork( this::searchInstruments );
 
-            // wait until all tasks are executed in parallel
-            printTimed("Now joining both tasks ... waiting ...");
-            int maxTimeOutInMs = 20_000; // 1s max for each musician => 17s max
+            // (2) wait until all tasks are executed in parallel
+            logWithTime("Now joining both tasks ... waiting ...");
             scope.joinUntil( Instant.now().plusMillis(maxTimeOutInMs) );
-            printTimed("Both tasks joined, all done");
+            logWithTime("Both tasks joined, all done");
 
-            // bring all instruments and all musicians together 🎵
-            List<Instrument> instruments = instrumentsTask.get();
-            List<Musician>     musicians = musiciansTask.get();
-            return new BigBand(instruments, musicians);
+            // (3) get all results and bring instruments and musicians together 🎵
+            if (musiciansTask.state() != FAILED && instrumentsTask.state() != FAILED) {
+                List<Instrument> instruments = instrumentsTask.get();
+                List<Musician>     musicians =   musiciansTask.get();
+                result = new BigBand(instruments, musicians);
+            }
+
+            return result;
         }
         catch (InterruptedException | TimeoutException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private List<Instrument> searchInstruments() throws InterruptedException {
-        printTimed("Task: Searching all instruments ...");
+    private List<Instrument> searchInstruments() {
+        logWithTime("Task: Searching all instruments ... starting");
 
-        List<String> instruments = Stream.of(Instrument.AllInstruments.values()).map(Enum::name).toList();
+        List<String> instrumentNames = Stream.of(Instrument.AllInstruments.values()).map(Enum::name).toList();
 
-        List<Instrument> instrumentsAsList = instruments.stream()
+        List<Instrument> instruments = instrumentNames.stream()
+                .peek(_ -> randomPause(50, 100)) // it takes a while to find each instrument
                 .map(Instrument::new)
-                .peek(instrument -> System.err.println("\t" + instrument.name() + " found and ready ..."))
-                .peek(_ -> randomPause(100, 500)) // it takes a little while to find each instrument
+                .peek(instrument -> System.err.println("\tInstrument " + instrument.name() + " found and ready ..."))
                 .collect(Collectors.toList());
 
-        printTimed("Task: Searching all instruments ... done");
+        logWithTime("Task: Searching all instruments ... done");
 
-        return instrumentsAsList;
+        return instruments;
     }
 
-    private List<Musician> wakeUpMusicians() throws InterruptedException {
-        printTimed("Task: Waking up all musicians ...");
+    private List<Musician> wakeUpMusicians() {
+        logWithTime("Task: Waking up all musicians ... starting");
 
-        List<String> musicians = Stream.of(Musician.AllMusicians.values()).map(Enum::name).toList();
+        List<String> musicianNames = Stream.of(Musician.AllMusicians.values()).map(Enum::name).toList();
 
-        // now let's enforce an error here
-        // if (musicians.size() > 0) throw new RuntimeException("stupid error, should end _all_ tasks"); // <<<--- SEE HERE
+        // now let's enforce an error here at musician number 3
+        AtomicInteger countDownToError = new AtomicInteger(3);
 
-        List<Musician> musiciansAsList = musicians.stream()
+        List<Musician> musicians = musicianNames.stream()
+                .peek(_ -> randomPause(100, 1_000)) //  it takes a while to wake up each musician
+//                .peek(_ -> {
+//                    countDownToError.decrementAndGet();
+//                    if (countDownToError.get() == 0) {
+//                        String errorText = "Boom! Error while working on waking up all musicians!";
+//                        System.err.println(errorText);
+//                        throw new RuntimeException(errorText);
+//                    }
+//                })
                 .map(Musician::new)
-                .peek(musician -> System.err.println("\t" + musician.name() + " woke up ..."))
-                .peek(_ -> randomPause(10, 1_000)) // it might takes some time to wake up each musician
+                .peek(musician -> System.err.println("\tMusician " + musician.name() + " woke up ..."))
                 .collect(Collectors.toList());
 
-        printTimed("Task: Waking up all musicians ... done");
+        logWithTime("Task: Waking up all musicians ... done");
 
-        return musiciansAsList;
+        return musicians;
     }
 }
