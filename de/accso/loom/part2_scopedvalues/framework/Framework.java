@@ -30,7 +30,7 @@ public class Framework implements Callback {
                        .where(userCtx,          user)
                     // run
                     .run(() -> {
-                        app.handle((Callback) this, request);
+                        app.handle((Callback) this, request); //TODO how to execute this on a new Thread?
                     });
 
             // no need to remove context explicitely, context is no longer bound!

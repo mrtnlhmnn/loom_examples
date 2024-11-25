@@ -8,13 +8,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Framework implements Callback {
+    private final ExecutorService executor;
+    private final Application app;
 
-    private Application app;
-
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
-
-    public Framework(Application app) {
+    public Framework(Application app, ExecutorService executor) {
         this.app = app;
+        this.executor = executor;
     }
 
     public  static final ThreadLocal<UUID>       correlationIdTL = new ThreadLocal<>();
@@ -37,8 +36,6 @@ public class Framework implements Callback {
         };
 
         executor.submit(task);
-        executor.submit(task);
-        executor.shutdown();
     }
 
     @Override

@@ -25,7 +25,7 @@ public class BigBandBuilderUsingStructuredConcurrency {
         int maxTimeOutInMs = 20_000; // 1s max for each musician => 17s max
 
         // or StructuredTaskScope.ShutdownOnFailure() or StructuredTaskScope.ShutdownOnSuccess()
-        try (var scope = new StructuredTaskScope<>()) {
+        try (var scope = new StructuredTaskScope<>()) {  //TODO how to distribute the tasks on Threads? (should also solve: LogHelper does show empty Thread name [] in log output)
 
             // (1) create tasks and fork them
             logWithTime("Now forking to wake up all musicians");
