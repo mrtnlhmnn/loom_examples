@@ -2,9 +2,9 @@ package de.accso.loom.part1_threadlocal;
 
 import de.accso.loom.part1_threadlocal.context.RegionCode;
 import de.accso.loom.part1_threadlocal.context.User;
+import de.accso.loom.part1_threadlocal.framework.Application;
 import de.accso.loom.part1_threadlocal.framework.Callback;
 import de.accso.loom.part1_threadlocal.framework.Request;
-import de.accso.loom.part1_threadlocal.framework.Application;
 
 import java.util.UUID;
 
